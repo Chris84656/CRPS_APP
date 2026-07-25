@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Surface (dark) -->
+    <color name="surface_container_lowest">#1F1B16</color>
+    <color name="surface_container_low">#2B2620</color>
+    <color name="surface_container">#332E28</color>
+    <color name="surface_container_high">#3D3830</color>
+    <color name="surface_container_highest">#4A443C</color>
+    <color name="outline">#A08C85</color>
+    <color name="outline_variant">#55433D</color>
+    <color name="error_container">#93000A</color>
+    <color name="tertiary_container">#215025</color>
+
+    <!-- Chart colors (dark) -->
+    <color name="chart_voltage">#FFB59E</color>
+    <color name="chart_current">#E3C193</color>
+    <color name="chart_power">#FFB59E</color>
+    <color name="chart_efficiency">#E3C193</color>
+    <color name="chart_temp1">#9FD49B</color>
+    <color name="chart_temp2">#FFB4AB</color>
+
+    <!-- Status (dark) -->
+    <color name="status_normal">#9FD49B</color>
+    <color name="status_abnormal">#FFB4AB</color>
+    <color name="status_unknown">#A08C85</color>
+    <color name="warning_banner_bg">#3E2723</color>
+    <color name="warning_banner_text">#FFB74D</color>
+</resources>
