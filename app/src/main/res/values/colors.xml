@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="ic_launcher_background">#FFFFFFFF</color>
+
+    <!-- Primary: 珊瑚橙 -->
+    <color name="primary">#99462A</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="primary_container">#D97757</color>
+    <color name="on_primary_container">#541400</color>
+
+    <!-- Secondary -->
+    <color name="secondary">#745A34</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="secondary_container">#FEDAAA</color>
+    <color name="on_secondary_container">#795E38</color>
+
+    <!-- Tertiary -->
+    <color name="tertiary">#39693B</color>
+    <color name="on_tertiary">#FFFFFF</color>
+    <color name="tertiary_container">#6C9E6A</color>
+    <color name="on_tertiary_container">#00330B</color>
+
+    <!-- Error -->
+    <color name="error">#BA1A1A</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="error_container">#FFDAD6</color>
+    <color name="on_error_container">#93000A</color>
+
+    <!-- Surface -->
+    <color name="background">#FFF8F3</color>
+    <color name="on_background">#1F1B16</color>
+    <color name="surface">#FFF8F3</color>
+    <color name="on_surface">#1F1B16</color>
+    <color name="surface_variant">#EAE1D8</color>
+    <color name="on_surface_variant">#55433D</color>
+    <color name="surface_container_lowest">#FFFFFF</color>
+    <color name="surface_container_low">#FCF2E9</color>
+    <color name="surface_container">#F6ECE4</color>
+    <color name="surface_container_high">#F0E7DE</color>
+    <color name="surface_container_highest">#EAE1D8</color>
+
+    <!-- Outline -->
+    <color name="outline">#88726C</color>
+    <color name="outline_variant">#DBC1B9</color>
+
+    <!-- Chart -->
+    <color name="chart_voltage">#99462A</color>
+    <color name="chart_current">#745A34</color>
+    <color name="chart_power">#99462A</color>
+    <color name="chart_efficiency">#745A34</color>
+    <color name="chart_temp1">#39693B</color>
+    <color name="chart_temp2">#BA1A1A</color>
+    <color name="chart_overlay">#80000000</color>
+
+    <!-- Status -->
+    <color name="status_normal">#39693B</color>
+    <color name="status_abnormal">#BA1A1A</color>
+    <color name="status_unknown">#6B5A54</color>
+    <color name="warning_banner_bg">#FFF3E0</color>
+    <color name="warning_banner_text">#E65100</color>
+</resources>

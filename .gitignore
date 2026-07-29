@@ -1,0 +1,31 @@
+﻿# Android build
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+
+# Local configuration files
+local.properties
+.idea/
+*.keystore
+!debug.keystore
+
+# Generated files
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Gradle
+.gradle/
+build/
+!gradle-wrapper.jar

@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.CRPS_APP" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_secondary_container</item>
+        <item name="colorTertiary">@color/tertiary</item>
+        <item name="colorOnTertiary">@color/on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/on_tertiary_container</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/on_error</item>
+        <item name="colorErrorContainer">@color/error_container</item>
+        <item name="colorOnErrorContainer">@color/on_error_container</item>
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorOnBackground">@color/on_background</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorOutlineVariant">@color/outline_variant</item>
+        <item name="android:statusBarColor">@color/surface</item>
+        <item name="android:navigationBarColor">@color/surface_container</item>
+
+        <!-- 自定义主题属性（默认指向当前暗色配色） -->
+        <item name="themePrimary">@color/primary</item>
+        <item name="themeOnPrimary">@color/on_primary</item>
+        <item name="themePrimaryContainer">@color/primary_container</item>
+        <item name="themeOnPrimaryContainer">@color/on_primary_container</item>
+        <item name="themeSecondary">@color/secondary</item>
+        <item name="themeOnSecondary">@color/on_secondary</item>
+        <item name="themeSecondaryContainer">@color/secondary_container</item>
+        <item name="themeOnSecondaryContainer">@color/on_secondary_container</item>
+        <item name="themeTertiary">@color/tertiary</item>
+        <item name="themeOnTertiary">@color/on_tertiary</item>
+        <item name="themeTertiaryContainer">@color/tertiary_container</item>
+        <item name="themeOnTertiaryContainer">@color/on_tertiary_container</item>
+        <item name="themeBackground">@color/background</item>
+        <item name="themeOnBackground">@color/on_background</item>
+        <item name="themeSurface">@color/surface</item>
+        <item name="themeOnSurface">@color/on_surface</item>
+        <item name="themeSurfaceVariant">@color/surface_variant</item>
+        <item name="themeOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="themeOutline">@color/outline</item>
+        <item name="themeOutlineVariant">@color/outline_variant</item>
+        <item name="themeSurfaceContainerLowest">@color/surface_container_lowest</item>
+        <item name="themeSurfaceContainerLow">@color/surface_container_low</item>
+        <item name="themeSurfaceContainer">@color/surface_container</item>
+        <item name="themeSurfaceContainerHigh">@color/surface_container_high</item>
+        <item name="themeSurfaceContainerHighest">@color/surface_container_highest</item>
+    </style>
+
+    <!-- 预设 0: 珊瑚橙（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset0" parent="">
+        <item name="colorPrimary">#FFB59E</item>
+        <item name="colorOnPrimary">#141210</item>
+        <item name="colorPrimaryContainer">#7A2F15</item>
+        <item name="colorOnPrimaryContainer">#FFDBD0</item>
+        <item name="colorSecondary">#FFCBA4</item>
+        <item name="colorOnSecondary">#141210</item>
+        <item name="colorSecondaryContainer">#5A431F</item>
+        <item name="colorOnSecondaryContainer">#FFDDB1</item>
+        <item name="colorTertiary">#9FD49B</item>
+        <item name="colorOnTertiary">#003A0E</item>
+        <item name="colorTertiaryContainer">#215025</item>
+        <item name="colorOnTertiaryContainer">#BAF0B6</item>
+        <item name="android:colorBackground">#141210</item>
+        <item name="colorOnBackground">#EAE1D8</item>
+        <item name="colorSurface">#1C1A18</item>
+        <item name="colorOnSurface">#EAE1D8</item>
+        <item name="colorSurfaceVariant">#55433D</item>
+        <item name="colorOnSurfaceVariant">#DBC1B9</item>
+        <item name="colorOutline">#A08C85</item>
+        <item name="colorOutlineVariant">#55433D</item>
+        <item name="colorSurfaceContainerLowest">#1F1B16</item>
+        <item name="colorSurfaceContainerLow">#2B2620</item>
+        <item name="colorSurfaceContainer">#332E28</item>
+        <item name="colorSurfaceContainerHigh">#3D3830</item>
+        <item name="colorSurfaceContainerHighest">#4A443C</item>
+    </style>
+
+    <!-- 预设 1: 靛蓝（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset1" parent="">
+        <item name="colorPrimary">#B2C5FF</item>
+        <item name="colorOnPrimary">#002B75</item>
+        <item name="colorPrimaryContainer">#003F9D</item>
+        <item name="colorOnPrimaryContainer">#DCE2FF</item>
+        <item name="colorSecondary">#C2C5FF</item>
+        <item name="colorOnSecondary">#282C5A</item>
+        <item name="colorSecondaryContainer">#3F4377</item>
+        <item name="colorOnSecondaryContainer">#E1E1FF</item>
+        <item name="colorTertiary">#E6B8D6</item>
+        <item name="colorOnTertiary">#45263D</item>
+        <item name="colorTertiaryContainer">#5D3E54</item>
+        <item name="colorOnTertiaryContainer">#FFD7F0</item>
+        <item name="android:colorBackground">#15151C</item>
+        <item name="colorOnBackground">#C5C5D2</item>
+        <item name="colorSurface">#191920</item>
+        <item name="colorOnSurface">#C5C5D2</item>
+        <item name="colorSurfaceVariant">#2A2A33</item>
+        <item name="colorOnSurfaceVariant">#C0BFD4</item>
+        <item name="colorOutline">#908F99</item>
+        <item name="colorOutlineVariant">#44444F</item>
+        <item name="colorSurfaceContainerLowest">#101017</item>
+        <item name="colorSurfaceContainerLow">#1E1E24</item>
+        <item name="colorSurfaceContainer">#25252C</item>
+        <item name="colorSurfaceContainerHigh">#2C2C33</item>
+        <item name="colorSurfaceContainerHighest">#36363D</item>
+    </style>
+
+    <!-- 预设 2: 森绿（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset2" parent="">
+        <item name="colorPrimary">#95D78F</item>
+        <item name="colorOnPrimary">#003A04</item>
+        <item name="colorPrimaryContainer">#155218</item>
+        <item name="colorOnPrimaryContainer">#B0F3A9</item>
+        <item name="colorSecondary">#B9CCB2</item>
+        <item name="colorOnSecondary">#243422</item>
+        <item name="colorSecondaryContainer">#3A4B37</item>
+        <item name="colorOnSecondaryContainer">#D5E8CD</item>
+        <item name="colorTertiary">#A0D0D0</item>
+        <item name="colorOnTertiary">#003636</item>
+        <item name="colorTertiaryContainer">#1F4E4D</item>
+        <item name="colorOnTertiaryContainer">#BCECEB</item>
+        <item name="android:colorBackground">#141411</item>
+        <item name="colorOnBackground">#E3E4DD</item>
+        <item name="colorSurface">#141411</item>
+        <item name="colorOnSurface">#E3E4DD</item>
+        <item name="colorSurfaceVariant">#2A2F26</item>
+        <item name="colorOnSurfaceVariant">#BFC7B6</item>
+        <item name="colorOutline">#8B9384</item>
+        <item name="colorOutlineVariant">#40473D</item>
+        <item name="colorSurfaceContainerLowest">#0E0F0C</item>
+        <item name="colorSurfaceContainerLow">#1A1B17</item>
+        <item name="colorSurfaceContainer">#20211C</item>
+        <item name="colorSurfaceContainerHigh">#262722</item>
+        <item name="colorSurfaceContainerHighest">#30312B</item>
+    </style>
+
+    <!-- 预设 3: 紫罗兰（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset3" parent="">
+        <item name="colorPrimary">#D0BCFF</item>
+        <item name="colorOnPrimary">#381E72</item>
+        <item name="colorPrimaryContainer">#4F378B</item>
+        <item name="colorOnPrimaryContainer">#EADDFF</item>
+        <item name="colorSecondary">#CCC2DC</item>
+        <item name="colorOnSecondary">#332D41</item>
+        <item name="colorSecondaryContainer">#4A4458</item>
+        <item name="colorOnSecondaryContainer">#E8DEF8</item>
+        <item name="colorTertiary">#EFB8C8</item>
+        <item name="colorOnTertiary">#492532</item>
+        <item name="colorTertiaryContainer">#633B48</item>
+        <item name="colorOnTertiaryContainer">#FFD8E4</item>
+        <item name="android:colorBackground">#1C1B1F</item>
+        <item name="colorOnBackground">#E6E1E5</item>
+        <item name="colorSurface">#1C1B1F</item>
+        <item name="colorOnSurface">#E6E1E5</item>
+        <item name="colorSurfaceVariant">#313033</item>
+        <item name="colorOnSurfaceVariant">#CAC4D0</item>
+        <item name="colorOutline">#938F99</item>
+        <item name="colorOutlineVariant">#49454F</item>
+        <item name="colorSurfaceContainerLowest">#151418</item>
+        <item name="colorSurfaceContainerLow">#222026</item>
+        <item name="colorSurfaceContainer">#2A282E</item>
+        <item name="colorSurfaceContainerHigh">#322F37</item>
+        <item name="colorSurfaceContainerHighest">#3C3940</item>
+    </style>
+
+    <!-- 预设 4: 樱桃红（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset4" parent="">
+        <item name="colorPrimary">#FFB4AB</item>
+        <item name="colorOnPrimary">#690005</item>
+        <item name="colorPrimaryContainer">#93000A</item>
+        <item name="colorOnPrimaryContainer">#FFDAD6</item>
+        <item name="colorSecondary">#E7BDB6</item>
+        <item name="colorOnSecondary">#442722</item>
+        <item name="colorSecondaryContainer">#5D3D37</item>
+        <item name="colorOnSecondaryContainer">#FFDAD4</item>
+        <item name="colorTertiary">#E2C48B</item>
+        <item name="colorOnTertiary">#3E2D04</item>
+        <item name="colorTertiaryContainer">#574419</item>
+        <item name="colorOnTertiaryContainer">#FFDEA8</item>
+        <item name="android:colorBackground">#201514</item>
+        <item name="colorOnBackground">#EDE0DE</item>
+        <item name="colorSurface">#201514</item>
+        <item name="colorOnSurface">#EDE0DE</item>
+        <item name="colorSurfaceVariant">#382725</item>
+        <item name="colorOnSurfaceVariant">#D8C2BE</item>
+        <item name="colorOutline">#A08C8A</item>
+        <item name="colorOutlineVariant">#534341</item>
+        <item name="colorSurfaceContainerLowest">#170F0E</item>
+        <item name="colorSurfaceContainerLow">#251715</item>
+        <item name="colorSurfaceContainer">#2D1E1C</item>
+        <item name="colorSurfaceContainerHigh">#372625</item>
+        <item name="colorSurfaceContainerHighest">#443230</item>
+    </style>
+
+    <!-- 预设 5: 海洋蓝（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset5" parent="">
+        <item name="colorPrimary">#7FDBEE</item>
+        <item name="colorOnPrimary">#00363F</item>
+        <item name="colorPrimaryContainer">#004F5A</item>
+        <item name="colorOnPrimaryContainer">#96F0FF</item>
+        <item name="colorSecondary">#B0CCD2</item>
+        <item name="colorOnSecondary">#1D3439</item>
+        <item name="colorSecondaryContainer">#354B50</item>
+        <item name="colorOnSecondaryContainer">#CCE8ED</item>
+        <item name="colorTertiary">#B8C4FF</item>
+        <item name="colorOnTertiary">#192B57</item>
+        <item name="colorTertiaryContainer">#334370</item>
+        <item name="colorOnTertiaryContainer">#DDE2FF</item>
+        <item name="android:colorBackground">#101415</item>
+        <item name="colorOnBackground">#E1E3E4</item>
+        <item name="colorSurface">#101415</item>
+        <item name="colorOnSurface">#E1E3E4</item>
+        <item name="colorSurfaceVariant">#273032</item>
+        <item name="colorOnSurfaceVariant">#BEC8CB</item>
+        <item name="colorOutline">#899296</item>
+        <item name="colorOutlineVariant">#3F484B</item>
+        <item name="colorSurfaceContainerLowest">#0B0F10</item>
+        <item name="colorSurfaceContainerLow">#151A1B</item>
+        <item name="colorSurfaceContainer">#1C2122</item>
+        <item name="colorSurfaceContainerHigh">#24292A</item>
+        <item name="colorSurfaceContainerHighest">#2E3335</item>
+    </style>
+
+    <!-- 预设 6: 沙漠金（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset6" parent="">
+        <item name="colorPrimary">#FFB86A</item>
+        <item name="colorOnPrimary">#422A00</item>
+        <item name="colorPrimaryContainer">#604000</item>
+        <item name="colorOnPrimaryContainer">#FFDDB2</item>
+        <item name="colorSecondary">#DEC4A1</item>
+        <item name="colorOnSecondary">#3D2E15</item>
+        <item name="colorSecondaryContainer">#57442A</item>
+        <item name="colorOnSecondaryContainer">#FBE0BA</item>
+        <item name="colorTertiary">#B8CE8E</item>
+        <item name="colorOnTertiary">#28360B</item>
+        <item name="colorTertiaryContainer">#3E4D1F</item>
+        <item name="colorOnTertiaryContainer">#D5EBAD</item>
+        <item name="android:colorBackground">#1F1B13</item>
+        <item name="colorOnBackground">#EAE1D0</item>
+        <item name="colorSurface">#1F1B13</item>
+        <item name="colorOnSurface">#EAE1D0</item>
+        <item name="colorSurfaceVariant">#342F24</item>
+        <item name="colorOnSurfaceVariant">#CDC5B4</item>
+        <item name="colorOutline">#A29A8A</item>
+        <item name="colorOutlineVariant">#4C4639</item>
+        <item name="colorSurfaceContainerLowest">#15130D</item>
+        <item name="colorSurfaceContainerLow">#28231B</item>
+        <item name="colorSurfaceContainer">#302B21</item>
+        <item name="colorSurfaceContainerHigh">#3A3429</item>
+        <item name="colorSurfaceContainerHighest">#453F33</item>
+    </style>
+
+    <!-- 预设 7: 石墨灰（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset7" parent="">
+        <item name="colorPrimary">#B2C5FF</item>
+        <item name="colorOnPrimary">#002B75</item>
+        <item name="colorPrimaryContainer">#2540A6</item>
+        <item name="colorOnPrimaryContainer">#DCE2FF</item>
+        <item name="colorSecondary">#C4C5DD</item>
+        <item name="colorOnSecondary">#2C2D37</item>
+        <item name="colorSecondaryContainer">#43444F</item>
+        <item name="colorOnSecondaryContainer">#DFE1F0</item>
+        <item name="colorTertiary">#FFB1CB</item>
+        <item name="colorOnTertiary">#492536</item>
+        <item name="colorTertiaryContainer">#633B4C</item>
+        <item name="colorOnTertiaryContainer">#FFD7E6</item>
+        <item name="android:colorBackground">#1A1B20</item>
+        <item name="colorOnBackground">#E4E1F6</item>
+        <item name="colorSurface">#1A1B20</item>
+        <item name="colorOnSurface">#E4E1F6</item>
+        <item name="colorSurfaceVariant">#292931</item>
+        <item name="colorOnSurfaceVariant">#C0BFD4</item>
+        <item name="colorOutline">#908F9D</item>
+        <item name="colorOutlineVariant">#44444F</item>
+        <item name="colorSurfaceContainerLowest">#141518</item>
+        <item name="colorSurfaceContainerLow">#1E1F24</item>
+        <item name="colorSurfaceContainer">#25262B</item>
+        <item name="colorSurfaceContainerHigh">#2D2E33</item>
+        <item name="colorSurfaceContainerHighest">#38383E</item>
+    </style>
+
+    <!-- 预设 8: 极简黑白（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset8" parent="">
+        <item name="colorPrimary">#E0E0E0</item>
+        <item name="colorOnPrimary">#1A1A1A</item>
+        <item name="colorPrimaryContainer">#A0A0A0</item>
+        <item name="colorOnPrimaryContainer">#2A2A2A</item>
+        <item name="colorSecondary">#B0B0B0</item>
+        <item name="colorOnSecondary">#2A2A2A</item>
+        <item name="colorSecondaryContainer">#6A6A6A</item>
+        <item name="colorOnSecondaryContainer">#1A1A1A</item>
+        <item name="colorTertiary">#909090</item>
+        <item name="colorOnTertiary">#1A1A1A</item>
+        <item name="colorTertiaryContainer">#808080</item>
+        <item name="colorOnTertiaryContainer">#2A2A2A</item>
+        <item name="android:colorBackground">#1A1A1A</item>
+        <item name="colorOnBackground">#E0E0E0</item>
+        <item name="colorSurface">#1A1A1A</item>
+        <item name="colorOnSurface">#E0E0E0</item>
+        <item name="colorSurfaceVariant">#2A2A2A</item>
+        <item name="colorOnSurfaceVariant">#B0B0B0</item>
+        <item name="colorOutline">#808080</item>
+        <item name="colorOutlineVariant">#404040</item>
+        <item name="colorSurfaceContainerLowest">#0E0E0E</item>
+        <item name="colorSurfaceContainerLow">#1A1A1A</item>
+        <item name="colorSurfaceContainer">#242424</item>
+        <item name="colorSurfaceContainerHigh">#2E2E2E</item>
+        <item name="colorSurfaceContainerHighest">#383838</item>
+    </style>
+
+    <!-- 预设 9: 电报蓝（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset9" parent="">
+        <item name="colorPrimary">#6FC8F0</item>
+        <item name="colorOnPrimary">#003544</item>
+        <item name="colorPrimaryContainer">#004F66</item>
+        <item name="colorOnPrimaryContainer">#B3E5FC</item>
+        <item name="colorSecondary">#B0C8D2</item>
+        <item name="colorOnSecondary">#1A2A30</item>
+        <item name="colorSecondaryContainer">#384B53</item>
+        <item name="colorOnSecondaryContainer">#D5E2E8</item>
+        <item name="colorTertiary">#E2C48B</item>
+        <item name="colorOnTertiary">#3E2D04</item>
+        <item name="colorTertiaryContainer">#574419</item>
+        <item name="colorOnTertiaryContainer">#FFDCC8</item>
+        <item name="android:colorBackground">#0F1517</item>
+        <item name="colorOnBackground">#DEE7EA</item>
+        <item name="colorSurface">#0F1517</item>
+        <item name="colorOnSurface">#DEE7EA</item>
+        <item name="colorSurfaceVariant">#252E30</item>
+        <item name="colorOnSurfaceVariant">#BEC8CB</item>
+        <item name="colorOutline">#899296</item>
+        <item name="colorOutlineVariant">#3F484B</item>
+        <item name="colorSurfaceContainerLowest">#0A0F10</item>
+        <item name="colorSurfaceContainerLow">#141A1B</item>
+        <item name="colorSurfaceContainer">#1C2122</item>
+        <item name="colorSurfaceContainerHigh">#24292A</item>
+        <item name="colorSurfaceContainerHighest">#2E3335</item>
+    </style>
+
+    <!-- 预设 10: 暮光紫（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset10" parent="">
+        <item name="colorPrimary">#C7D0FF</item>
+        <item name="colorOnPrimary">#001A72</item>
+        <item name="colorPrimaryContainer">#3A47B5</item>
+        <item name="colorOnPrimaryContainer">#E0E5FF</item>
+        <item name="colorSecondary">#C2C4DC</item>
+        <item name="colorOnSecondary">#2A2D42</item>
+        <item name="colorSecondaryContainer">#43476A</item>
+        <item name="colorOnSecondaryContainer">#E1E2F5</item>
+        <item name="colorTertiary">#EFB8C8</item>
+        <item name="colorOnTertiary">#492532</item>
+        <item name="colorTertiaryContainer">#633B48</item>
+        <item name="colorOnTertiaryContainer">#FFD8E4</item>
+        <item name="android:colorBackground">#15161B</item>
+        <item name="colorOnBackground">#E4E2EC</item>
+        <item name="colorSurface">#15161B</item>
+        <item name="colorOnSurface">#E4E2EC</item>
+        <item name="colorSurfaceVariant">#2A2A33</item>
+        <item name="colorOnSurfaceVariant">#C0BFD4</item>
+        <item name="colorOutline">#908F99</item>
+        <item name="colorOutlineVariant">#44444F</item>
+        <item name="colorSurfaceContainerLowest">#101014</item>
+        <item name="colorSurfaceContainerLow">#1E1E24</item>
+        <item name="colorSurfaceContainer">#25252C</item>
+        <item name="colorSurfaceContainerHigh">#2C2C33</item>
+        <item name="colorSurfaceContainerHighest">#36363D</item>
+    </style>
+
+    <!-- 预设 11: 优雅灰白（暗色） -->
+    <style name="ThemeOverlay.CRPS_APP.Preset11" parent="">
+        <item name="colorPrimary">#CCCCCC</item>
+        <item name="colorOnPrimary">#2A2A2A</item>
+        <item name="colorPrimaryContainer">#808080</item>
+        <item name="colorOnPrimaryContainer">#1A1A1A</item>
+        <item name="colorSecondary">#9C9C9C</item>
+        <item name="colorOnSecondary">#1A1A1A</item>
+        <item name="colorSecondaryContainer">#5C5C5C</item>
+        <item name="colorOnSecondaryContainer">#2A2A2A</item>
+        <item name="colorTertiary">#B0B0B0</item>
+        <item name="colorOnTertiary">#1A1A1A</item>
+        <item name="colorTertiaryContainer">#909090</item>
+        <item name="colorOnTertiaryContainer">#2A2A2A</item>
+        <item name="android:colorBackground">#1F1F1F</item>
+        <item name="colorOnBackground">#CCCCCC</item>
+        <item name="colorSurface">#1F1F1F</item>
+        <item name="colorOnSurface">#CCCCCC</item>
+        <item name="colorSurfaceVariant">#303030</item>
+        <item name="colorOnSurfaceVariant">#9C9C9C</item>
+        <item name="colorOutline">#6A6A6A</item>
+        <item name="colorOutlineVariant">#3A3A3A</item>
+        <item name="colorSurfaceContainerLowest">#161616</item>
+        <item name="colorSurfaceContainerLow">#1F1F1F</item>
+        <item name="colorSurfaceContainer">#262626</item>
+        <item name="colorSurfaceContainerHigh">#2E2E2E</item>
+        <item name="colorSurfaceContainerHighest">#363636</item>
+    </style>
+</resources>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CRPS Monitor</string>
+    <string name="tab_control">电源控制</string>
+    <string name="tab_details">数据曲线</string>
+    <string name="tab_info">电源信息</string>
+
+    <string name="device_connection">设备连接</string>
+    <string name="select_device">选择 CRPS 设备…</string>
+    <string name="connect">连接</string>
+    <string name="connecting">连接中…</string>
+    <string name="disconnect">断开连接</string>
+    <string name="not_connected">未连接</string>
+    <string name="connected">已连接</string>
+    <string name="scanning">正在搜索设备…</string>
+    <string name="auto_connecting">正在自动连接 %s…</string>
+    <string name="power_state">电源状态</string>
+    <string name="power_on">电源运行中</string>
+    <string name="power_off">电源关闭</string>
+    <string name="ac_input">AC 输入</string>
+    <string name="dc_output">DC 输出</string>
+    <string name="temperature_monitor">温度监控</string>
+    <string name="ambient_t1">环境 T1</string>
+    <string name="hotspot_t2">热点 T2</string>
+    <string name="fan_speed">风扇转速</string>
+    <string name="operation_timeout">操作超时，请重试</string>
+    <string name="retry">重试</string>
+    <string name="data_interrupted">数据中断，请检查设备连接</string>
+
+    <string name="runtime">已运行时间</string>
+    <string name="no_data">暂无数据</string>
+    <string name="data_paused">数据中断</string>
+    <string name="back_to_live">回到实时</string>
+    <string name="time_1min">1min</string>
+    <string name="time_5min">5min</string>
+    <string name="time_30min">30min</string>
+    <string name="chart_voltage">输出电压 (V)</string>
+    <string name="chart_current">输出电流 (A)</string>
+    <string name="chart_power">输出功率 (W)</string>
+    <string name="chart_efficiency">转换效率 (%)</string>
+    <string name="chart_ambient">环境温度 (°C)</string>
+    <string name="chart_hotspot">热点温度 (°C)</string>
+    <string name="efficiency_note">* 效率 = 输出功率 ÷ 输入功率，由设备固件经 PMBus 采集计算并通过蓝牙上报，应用端经 EMA 滤波平滑显示，数据仅供参考。</string>
+
+    <string name="power_info">电源信息</string>
+    <string name="manufacturer">厂商</string>
+    <string name="model">型号</string>
+    <string name="firmware_version">固件版本</string>
+    <string name="pmbus_version">PMBus 版本</string>
+    <string name="rated_current">额定最大输出电流</string>
+    <string name="rated_power">额定最大功率</string>
+    <string name="ambient_otp">环境最高保护温度</string>
+    <string name="hotspot_otp">热点最高保护温度</string>
+    <string name="no_info">未获取到电源信息，请确认设备已连接</string>
+    <string name="unknown">未知</string>
+    <string name="status_registers">状态寄存器</string>
+    <string name="status_iout">STATUS_IOUT</string>
+    <string name="status_input">STATUS_INPUT</string>
+    <string name="status_temperature">STATUS_TEMPERATURE</string>
+    <string name="status_fans">STATUS_FANS_1_2</string>
+    <string name="status_normal">正常</string>
+    <string name="status_abnormal">异常</string>
+    <string name="status_unknown">未知</string>
+    <string name="static_interrupted">静态信息中断</string>
+
+    <string name="permission_ble_title">蓝牙权限说明</string>
+    <string name="permission_ble_message">本应用需要蓝牙权限来扫描和连接 CRPS 电源监控设备。</string>
+    <string name="permission_location_title">定位权限说明</string>
+    <string name="permission_location_message">Android 11 及以下系统需要定位权限才能扫描蓝牙设备，本应用不会获取您的位置信息。</string>
+    <string name="bluetooth_off_message">蓝牙未开启，请先开启蓝牙</string>
+    <string name="open_settings">打开设置</string>
+    <string name="permission_denied_message">缺少必要权限，应用无法正常工作，请前往设置开启权限</string>
+</resources>

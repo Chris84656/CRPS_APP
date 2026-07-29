@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_control"
+        android:icon="@drawable/ic_power"
+        android:title="@string/tab_control" />
+    <item
+        android:id="@+id/nav_details"
+        android:icon="@drawable/ic_analytics"
+        android:title="@string/tab_details" />
+    <item
+        android:id="@+id/nav_info"
+        android:icon="@drawable/ic_info"
+        android:title="@string/tab_info" />
+</menu>
