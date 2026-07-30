@@ -29,16 +29,17 @@ public class NumberFormatter {
     }
 
     public static String runtime(long seconds) {
-        if (seconds < 99 * 3600) {
-            long h = seconds / 3600;
-            long m = (seconds % 3600) / 60;
-            long s = seconds % 60;
-            return String.format(Locale.US, "%02d:%02d:%02d", h, m, s);
-        } else {
-            long days = seconds / 86400;
-            long hours = (seconds % 86400) / 3600;
-            return String.format(Locale.US, "%dD%dH", days, hours);
-        }
+        if (seconds <= 0) return "0秒";
+        long days = seconds / 86400;
+        long hours = (seconds % 86400) / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+        StringBuilder sb = new StringBuilder();
+        if (days > 0) sb.append(days).append("天");
+        if (hours > 0) sb.append(hours).append("时");
+        if (minutes > 0) sb.append(minutes).append("分");
+        if (secs > 0 || sb.length() == 0) sb.append(secs).append("秒");
+        return sb.toString();
     }
 
     public static String hex(int value) {

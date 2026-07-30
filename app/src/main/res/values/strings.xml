@@ -40,7 +40,7 @@
     <string name="chart_efficiency">转换效率 (%)</string>
     <string name="chart_ambient">环境温度 (°C)</string>
     <string name="chart_hotspot">热点温度 (°C)</string>
-    <string name="efficiency_note">* 效率 = 输出功率 ÷ 输入功率，由设备固件经 PMBus 采集计算并通过蓝牙上报，应用端经 EMA 滤波平滑显示，数据仅供参考。</string>
+    <string name="data_notes">* 输出电压由 PMBus 寄存器直接读取，数据仅供参考。\n* 输出电流由 PMBus 寄存器直接读取，数据仅供参考。\n* 输出功率由输出电压与输出电流计算得出，数据仅供参考。\n* 效率由输出功率与输入功率的比值计算得出，数据仅供参考。\n* 环境温度由 PMBus 寄存器直接读取，数据仅供参考。\n* 热点温度由 PMBus 寄存器直接读取，数据仅供参考。</string>
 
     <string name="power_info">电源信息</string>
     <string name="manufacturer">厂商</string>

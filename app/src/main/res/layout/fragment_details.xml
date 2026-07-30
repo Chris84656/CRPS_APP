@@ -27,41 +27,50 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical">
+                android:orientation="vertical"
+                android:padding="16dp">
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_schedule"
-                    app:tint="?attr/colorOnPrimaryContainer" />
-
-                <TextView
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:text="@string/runtime"
-                    android:textSize="14sp"
-                    android:textColor="?attr/colorOnPrimaryContainer" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_schedule"
+                        app:tint="?attr/colorOnPrimaryContainer" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/runtime"
+                        android:textSize="14sp"
+                        android:textColor="?attr/colorOnPrimaryContainer" />
+
+                    <View
+                        android:id="@+id/view_status_dot"
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_dot" />
+
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tv_runtime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="00:00:00"
-                    android:textSize="24sp"
+                    android:layout_marginStart="32dp"
+                    android:layout_marginTop="4dp"
+                    android:text="0秒"
+                    android:textSize="26sp"
                     android:textStyle="bold"
-                    android:fontFamily="monospace"
                     android:textColor="?attr/colorOnPrimaryContainer" />
 
-                <View
-                    android:id="@+id/view_status_dot"
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_dot" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -239,10 +248,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:layout_marginBottom="4dp"
-            android:gravity="center"
-            android:text="@string/efficiency_note"
+            android:text="@string/data_notes"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="10sp" />
+            android:textSize="8sp" />
 
     </LinearLayout>
 </ScrollView>

@@ -200,6 +200,7 @@ public class DetailsFragment extends Fragment {
                 c.setTimeAnchor(now, data.rt);
             }
             if (isLiveMode) pushDataToCharts();
+            viewStatusDot.setBackgroundResource(data.isPowerOn() ? R.drawable.bg_dot : R.drawable.bg_dot_off);
         });
 
         viewModel.getDataInterrupted().observe(getViewLifecycleOwner(), interrupted -> {
@@ -209,7 +210,6 @@ public class DetailsFragment extends Fragment {
             overlayChart1.setVisibility(visibility);
             if (overlayChart2 != null) overlayChart2.setVisibility(visibility);
             if (overlayChart3 != null) overlayChart3.setVisibility(visibility);
-            viewStatusDot.setBackgroundResource(interrupted ? R.drawable.bg_dot_warning : R.drawable.bg_dot);
         });
 
         viewModel.getConnectionState().observe(getViewLifecycleOwner(), state -> {
