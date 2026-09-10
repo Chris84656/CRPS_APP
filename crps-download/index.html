@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CRPS Monitor V1.0 (Compose) 下载</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --text: #1b1b21;
+    --muted: #6d6d78;
+    --primary: #2c52b8;
+    --border: #e4e5ee;
+    --success: #1c9e63;
+    --radius: 16px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 30px rgba(20, 25, 60, .06);
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+  }
+  .logo {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #2c52b8, #5a78d9);
+    color: #fff;
+    font-weight: 700;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    letter-spacing: 1px;
+  }
+  h1 { font-size: 22px; font-weight: 700; }
+  .ver { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .note {
+    background: #eef3ff;
+    color: #25407f;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin: 20px 0;
+    line-height: 1.6;
+  }
+  .download {
+    display: block;
+    background: var(--primary);
+    color: #fff;
+    text-decoration: none;
+    font-size: 17px;
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 14px 0;
+    transition: background .15s ease;
+  }
+  .download:hover { background: #2446a0; }
+  .meta { margin-top: 14px; color: var(--muted); font-size: 12px; line-height: 1.8; }
+  .meta b { color: var(--success); font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">CRPS</div>
+    <h1>CRPS Monitor</h1>
+    <div class="ver">V1.0 (Compose) · Android 8.0+</div>
+    <div class="note">新增完全重做的数据曲线页：六路实时曲线、60fps 丝滑滚动；全新电源控制页与 12 套主题配色。</div>
+    <a class="download" href="./app-release.apk" download="CRPS-Monitor-V1.0-Compose.apk">下载 APK（11.4 MB）</a>
+    <div class="meta">
+      支持 BLE 连接 ESP32-C3 监控 CRPS 服务器电源<br/>
+      需要 Android 12+ 蓝牙扫描/连接权限<br/>
+      <b>国内直连无需翻墙</b> · 由 Cloudflare Pages 分发
+    </div>
+  </div>
+</body>
+</html>
