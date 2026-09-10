@@ -16,10 +16,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://jitpack.io") }
     }
 }
 
-rootProject.name = "crps_re0"
+rootProject.name = "crps_compose"
 include(":app")
- 
