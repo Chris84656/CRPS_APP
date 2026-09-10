@@ -12,3 +12,6 @@
 
 # 固件与设计资料不开源，不纳入仓库
 /CRPS2.0
+# 设计素材图标（本地构建使用，不入库）
+**/ic_launcher*.png
+**/ic_launcher*.webp

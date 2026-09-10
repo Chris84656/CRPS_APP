@@ -49,8 +49,8 @@ fun ThemeSheet(
 
     val systemDark = isSystemInDarkTheme()
     val dark = when (darkMode) {
-        ThemeStore.DARK_DARK -> true
-        ThemeStore.DARK_LIGHT -> false
+        cn.ntit.crps_compose.theme.ThemeStore.DARK_DARK -> true
+        cn.ntit.crps_compose.theme.ThemeStore.DARK_LIGHT -> false
         else -> systemDark
     }
 

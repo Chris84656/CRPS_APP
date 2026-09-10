@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "crps_compose"
 include(":app")
+ 
