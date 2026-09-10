@@ -42,7 +42,8 @@ flowchart LR
 ./gradlew assembleRelease   # 产物: app/build/outputs/apk/release/app-release.apk
 ```
 
-> 固件（ESP32-C3）与设计素材不在此仓库中开源。
+> 应用图标为本项目设计素材（未开源，不入库）；clone 后如缺失 `mipmap-*/ic_launcher*.png`，请自行放置或改用仓库默认图标。
+> 固件（ESP32-C3 的 CRPS2.0 目录）亦不在此仓库中开源。
 
 ## 更新日志
 
