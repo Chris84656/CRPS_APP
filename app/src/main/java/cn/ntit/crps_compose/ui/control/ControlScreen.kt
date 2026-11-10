@@ -92,8 +92,16 @@ fun ControlScreen(viewModel: MainViewModel) {
     val connectionState by viewModel.connectionState.collectAsState()
     val devices by viewModel.scannedDevices.collectAsState()
     val connectedDevice by viewModel.connectedDevice.collectAsState()
-    val dynamic by viewModel.dynamicData.collectAsState()
+    val rawDynamic by viewModel.dynamicData.collectAsState()
     val interrupted by viewModel.dataInterrupted.collectAsState()
+    val dynamic = rawDynamic.takeUnless { interrupted }
+    val qualityMessage = when {
+        interrupted -> R.string.data_interrupted
+        dynamic == null -> R.string.waiting_data
+        dynamic.valid == false -> R.string.collection_failed
+        dynamic.valid == null -> R.string.collection_unknown
+        else -> null
+    }
     val powerPending by viewModel.powerPending.collectAsState()
     val powerTimeout by viewModel.powerTimeout.collectAsState()
 
@@ -139,7 +147,7 @@ fun ControlScreen(viewModel: MainViewModel) {
         ) {
             // 数据中断横幅（展开/收起动画）
             AnimatedVisibility(
-                visible = interrupted && connected,
+                visible = qualityMessage != null && connected,
                 enter = fadeIn(tween(220)) + expandVertically(tween(260)),
                 exit = fadeOut(tween(160)) + shrinkVertically(tween(220)),
             ) {
@@ -153,7 +161,7 @@ fun ControlScreen(viewModel: MainViewModel) {
                     shape = RoundedCornerShape(10.dp),
                 ) {
                     Text(
-                        text = stringResource(R.string.data_interrupted),
+                        text = stringResource(qualityMessage ?: R.string.waiting_data),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(12.dp),
@@ -307,22 +315,20 @@ fun ControlScreen(viewModel: MainViewModel) {
                                     label = "powerStatus",
                                 ) { on ->
                                     Text(
-                                        text = stringResource(if (on) R.string.power_on else R.string.power_off),
+                                        text = stringResource(if (dynamic == null) R.string.unknown else if (on) R.string.power_on else R.string.power_off),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = powerTextColor,
                                     )
                                 }
                             }
                             Switch(
-                                checked = pendingTarget ?: (dynamic?.isPowerOn == true),
+                                checked = if (powerPending) pendingTarget ?: (dynamic?.isPowerOn == true) else dynamic?.isPowerOn == true,
                                 onCheckedChange = { on ->
-                                    if (!powerPending) {
-                                        pendingTarget = on
-                                        lastTarget = on
-                                        viewModel.sendPower(on)
-                                    }
+                                    pendingTarget = on
+                                    lastTarget = on
+                                    viewModel.sendPower(on)
                                 },
-                                enabled = connected && !powerPending,
+                                enabled = connected && dynamic != null,
                             )
                         }
                     }
@@ -339,7 +345,7 @@ fun ControlScreen(viewModel: MainViewModel) {
                         ) {
                             ReadingRow("Vin", dynamic?.vin, "V", NumberFormatter::voltage)
                             ReadingRow("Iin", dynamic?.iin, "A", NumberFormatter::current)
-                            ReadingRow("Pin", dynamic?.let { it.vin * it.iin }, "W", NumberFormatter::power)
+                            ReadingRow("Sin", dynamic?.apparentPower, "VA", NumberFormatter::power)
                         }
                         ReadingCard(
                             title = stringResource(R.string.dc_output),

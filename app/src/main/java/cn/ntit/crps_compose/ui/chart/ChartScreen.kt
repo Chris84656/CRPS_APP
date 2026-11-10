@@ -122,16 +122,13 @@ private const val TENSION = 0.4f
 fun ChartScreen(viewModel: MainViewModel) {
     val connectionState by viewModel.connectionState.collectAsState()
     val interrupted by viewModel.dataInterrupted.collectAsState()
-    val dynamic by viewModel.dynamicData.collectAsState()
+    val rawDynamic by viewModel.dynamicData.collectAsState()
+    val dynamic = rawDynamic.takeUnless { interrupted }
     val preset by viewModel.presetIndex.collectAsState()
     val darkMode by viewModel.darkMode.collectAsState()
     val connected = connectionState == BleManager.STATE_CONNECTED
 
-    // 运行时间显示：实时跟随 dynamic 更新；断连时保持最后值
-    var runtimeText by remember { mutableStateOf("0秒") }
-    LaunchedEffect(dynamic) {
-        dynamic?.let { runtimeText = NumberFormatter.runtime(it.rt) }
-    }
+    val runtimeText = dynamic?.let { NumberFormatter.runtime(it.rt) } ?: "--"
 
     // 帧序列号：每帧 +1 触发 Canvas 重绘；仅传给 Canvas 在绘制期读取 → 只失效绘制阶段
     val frameTick = remember { mutableLongStateOf(0L) }
@@ -154,6 +151,11 @@ fun ChartScreen(viewModel: MainViewModel) {
         while (true) {
             withFrameNanos { now ->
                 val xs = viewModel.xTimes
+                if (xs.size < 2) {
+                    anchorTimeNs = 0L
+                    viewReady = false
+                    return@withFrameNanos
+                }
                 if (anchorTimeNs == 0L && xs.size > 1) {
                     anchorTimeNs = now
                     anchorX = xs[xs.size - 1]
@@ -174,7 +176,7 @@ fun ChartScreen(viewModel: MainViewModel) {
 
     val chartColors = chartColorsOf(preset, 0xFF2C52B8.toInt(), darkMode)
     // 状态圆点：连接且数据未中断为绿色（呼吸扩散），否则红色
-    val statusActive = connected && !interrupted
+    val statusActive = connected && !interrupted && dynamic?.valid == true
     // 数据每 250ms 到达触发 dynamic 状态变化 → 重组刷新 hasData
     val hasData = viewModel.xTimes.size > 1
     @Suppress("UNUSED_VARIABLE")
@@ -539,7 +541,7 @@ private fun SingleChartCard(
                     )
                 }
                 Spacer(Modifier.width(6.dp))
-                StatusDot(active = statusActive)
+                StatusDot(active = statusActive && value != null)
             }
 
             Spacer(Modifier.height(6.dp))
@@ -673,13 +675,30 @@ private fun DrawScope.drawGradientArea(
 ) {
     if (xTimes.isEmpty() || values.isEmpty()) return
     val n = minOf(xTimes.size, values.size)
+    if (n < 2) return
     val yBase = yMax - yMin
     if (yBase <= 0f) return
     if (window <= 0f) return
 
     val startX = viewportStart - window
     val endX = viewportStart + window * 1.4f
-    val start = lowerBound(xTimes, startX).coerceIn(1, n - 1)
+    val start = (lowerBound(xTimes, startX) - 1).coerceIn(0, n - 1)
+    val end = (lowerBound(xTimes, endX) + 1).coerceAtMost(n)
+    // Missing samples leave a gap; never interpolate across a failed measurement.
+    if ((start until end).any { !values[it].isFinite() }) {
+        var cursor = start
+        while (cursor < end) {
+            while (cursor < end && !values[cursor].isFinite()) cursor++
+            val first = cursor
+            while (cursor < end && values[cursor].isFinite()) cursor++
+            if (cursor - first >= 2) {
+                drawGradientArea(xTimes.subList(first, cursor), values.subList(first, cursor), color,
+                    yMin, yMax, viewportStart, window, gridLeft, gridRight, padTop, plotW, plotH,
+                    if (cursor == n) virtX else Float.NaN, if (cursor == n) virtY else Float.NaN)
+            }
+        }
+        return
+    }
 
     // 1. 收集可见窗口内的真实点（含右边缘余量），转像素坐标。
     //    抽稀：相邻点像素间距 < MIN_SEG_PX 时丢弃（点太密转角显不出弧度）；
@@ -709,8 +728,10 @@ private fun DrawScope.drawGradientArea(
     if (px.size < 2 || px[0] > gridRight) return
 
     // 2. 尾部追加右缘虚拟锚点（X≈右缘、Y 平滑过渡），消除 250ms 阶跃突进
-    px.add(virtX)
-    py.add(virtY)
+    if (virtX.isFinite() && virtY.isFinite() && virtX > px.last()) {
+        px.add(virtX)
+        py.add(virtY)
+    }
     val m = px.size
 
     // 3. 三次贝塞尔平滑（FlClash 式）：控制点由前后采样点推算，

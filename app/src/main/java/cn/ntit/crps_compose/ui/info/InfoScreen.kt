@@ -53,10 +53,13 @@ import cn.ntit.crps_compose.viewmodel.MainViewModel
 /** 信息页：电源静态信息 + 状态寄存器 */
 @Composable
 fun InfoScreen(viewModel: MainViewModel) {
-    val static by viewModel.staticData.collectAsState()
-    val dynamic by viewModel.dynamicData.collectAsState()
+    val rawStatic by viewModel.staticData.collectAsState()
+    val rawDynamic by viewModel.dynamicData.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
     val staticInterrupted by viewModel.staticInterrupted.collectAsState()
+    val interrupted by viewModel.dataInterrupted.collectAsState()
+    val static = rawStatic.takeUnless { staticInterrupted }
+    val dynamic = rawDynamic.takeUnless { interrupted }
 
     val connected = connectionState == BleManager.STATE_CONNECTED
     val hasData = connected && static != null
@@ -113,10 +116,10 @@ fun InfoScreen(viewModel: MainViewModel) {
                 )
                 InfoCard {
                     dynamic?.let { d ->
-                        StatusRow(stringResource(R.string.status_iout), d.si)
-                        StatusRow(stringResource(R.string.status_input), d.sn)
-                        StatusRow(stringResource(R.string.status_temperature), d.st)
-                        StatusRow(stringResource(R.string.status_fans), d.sf)
+                        StatusRow(stringResource(R.string.status_iout), d.si, d.valid != null)
+                        StatusRow(stringResource(R.string.status_input), d.sn, d.valid != null)
+                        StatusRow(stringResource(R.string.status_temperature), d.st, d.valid != null)
+                        StatusRow(stringResource(R.string.status_fans), d.sf, d.valid != null)
                     }
                 }
 
@@ -141,7 +144,7 @@ fun InfoScreen(viewModel: MainViewModel) {
 
         // 版本信息
         Text(
-            text = "CRPS Monitor\nAuthor: Chris84656\nVersion: V1.0 (Compose)",
+            text = "${stringResource(R.string.app_name)}\nAuthor: Chris84656\nVersion: ${cn.ntit.crps_compose.BuildConfig.VERSION_NAME}",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
@@ -188,12 +191,13 @@ private fun InfoRow(label: String, value: String?) {
 }
 
 @Composable
-private fun StatusRow(label: String, value: Int) {
+private fun StatusRow(label: String, value: Int?, verified: Boolean) {
     var expanded by rememberSaveable(label) { mutableStateOf(false) }
 
     val (stateText, stateColor) = when {
+        value == null || !verified -> stringResource(R.string.status_unknown) to MaterialTheme.colorScheme.onSurfaceVariant
         value == 0x0000 -> stringResource(R.string.status_normal) to MaterialTheme.colorScheme.tertiary
-        value == 0x0001 -> stringResource(R.string.status_abnormal) to MaterialTheme.colorScheme.error
+        value != 0 -> stringResource(R.string.status_abnormal) to MaterialTheme.colorScheme.error
         else -> stringResource(R.string.status_unknown) to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
@@ -254,7 +258,7 @@ private fun StatusRow(label: String, value: Int) {
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest),
             ) {
                 Text(
-                    text = NumberFormatter.hex(value),
+                    text = value?.let(NumberFormatter::hex) ?: "--",
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
