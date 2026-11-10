@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.ParcelUuid
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
 import cn.ntit.crps_compose.data.DynamicData
@@ -37,7 +38,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import java.nio.charset.StandardCharsets
 import java.util.Collections
 import java.util.UUID
 
@@ -46,7 +46,7 @@ import java.util.UUID
  *
  * 移植自旧版 crps_re0 的 Java 实现，保留全部健壮性设计：
  * - GATT 操作队列 + 超时三层兜底（超时清队列 / g==gatt 过滤 / 空队列直接 return）
- * - JSON 拼包缓冲区（StringBuffer 保证 binder 线程 append 与主线程 reset 线程安全）
+ * - 每个特征独立、有长度和时间限制的 UTF-8 JSON 拼包
  * - 意外断连自动重连（次数限制 + 间隔）
  * - 蓝牙关闭广播监听
  *
@@ -75,9 +75,9 @@ class BleManager private constructor(context: Context) {
         private const val MTU_SIZE = 247
         private const val SCAN_DURATION_MS = 7_000L
         private const val MAX_RECONNECT_ATTEMPTS = 3
-        private const val GATT_OP_TIMEOUT_MS = 5_000L
+        private const val GATT_OP_TIMEOUT_MS = 60_000L
         private const val RECONNECT_DELAY_MS = 2_000L
-        private const val RECONNECT_TIMEOUT_MS = 5_000L
+        private const val CONNECTION_TIMEOUT_MS = 60_000L
 
         @Volatile
         private var instance: BleManager? = null
@@ -109,6 +109,12 @@ class BleManager private constructor(context: Context) {
 
     private val _staticData = MutableStateFlow<StaticData?>(null)
     val staticData: StateFlow<StaticData?> = _staticData.asStateFlow()
+    private val _staticPackets = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val staticPackets: SharedFlow<Unit> = _staticPackets.asSharedFlow()
+
+    @Volatile
+    var sessionId = 0L
+        private set
 
     private val _errorEvents = MutableSharedFlow<String>(extraBufferCapacity = 16)
     val errorEvents: SharedFlow<String> = _errorEvents.asSharedFlow()
@@ -130,10 +136,16 @@ class BleManager private constructor(context: Context) {
     private var isScanning = false
     private var userInitiatedDisconnect = false
     private var currentMtu = 23
+    private var servicesRequested = false
+    private var servicesReady = false
+    private var controlReady = false
+    private var receivedDynamic = false
+    private var powerWriteCallback: ((Boolean) -> Unit)? = null
+    private val pendingSubscriptions = mutableSetOf<UUID>()
 
     // JSON 拼包缓冲区
-    private val jsonBufferData = StringBuffer()
-    private val jsonBufferStatic = StringBuffer()
+    private val jsonBufferData = JsonFrameBuffer()
+    private val jsonBufferStatic = JsonFrameBuffer()
 
     // GATT 操作队列
     private val gattQueue = Collections.synchronizedList(ArrayList<Runnable>())
@@ -278,6 +290,7 @@ class BleManager private constructor(context: Context) {
     }
 
     private fun doConnect(address: String) {
+        sessionId++
         reconnectJob?.cancel()
         reconnectTimeoutJob?.cancel()
 
@@ -299,6 +312,13 @@ class BleManager private constructor(context: Context) {
         gatt = device.connectGatt(appContext, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
         // GATT 创建后复位标志：旧 GATT 的延迟回调由 g != this.gatt 过滤
         userInitiatedDisconnect = false
+        val expectedGatt = gatt
+        reconnectTimeoutJob = scope.launch {
+            delay(CONNECTION_TIMEOUT_MS)
+            if (gatt === expectedGatt && _connectionState.value == STATE_CONNECTING) {
+                failConnection("连接或配对超时，请重试")
+            }
+        }
     }
 
     fun disconnect() {
@@ -311,6 +331,16 @@ class BleManager private constructor(context: Context) {
     }
 
     private fun disconnectGatt() {
+        sessionId++
+        powerWriteCallback?.invoke(false)
+        powerWriteCallback = null
+        reconnectTimeoutJob?.cancel()
+        servicesRequested = false
+        servicesReady = false
+        controlReady = false
+        receivedDynamic = false
+        pendingSubscriptions.clear()
+        currentMtu = 23
         gatt?.let {
             it.disconnect()
             it.close()
@@ -321,59 +351,53 @@ class BleManager private constructor(context: Context) {
             gattBusy = false
         }
         gattOpTimeoutJob?.cancel()
-        jsonBufferData.setLength(0)
-        jsonBufferStatic.setLength(0)
+        jsonBufferData.clear()
+        jsonBufferStatic.clear()
+        _dynamicData.value = null
+        _staticData.value = null
+        _connectedDevice.value = null
     }
 
     // ==================== 写入控制 ====================
 
-    fun sendPowerCommand(powerOn: Boolean) {
-        val g = gatt ?: return
-        val service: BluetoothGattService = g.getService(SERVICE_UUID) ?: return
-        val ctrlChar: BluetoothGattCharacteristic = service.getCharacteristic(CHAR_CTRL_UUID) ?: return
-
-        val cmd = byteArrayOf(if (powerOn) 0x01 else 0x00)
-        ctrlChar.value = cmd
-        ctrlChar.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+    fun sendPowerCommand(powerOn: Boolean, token: Long?, onWritten: (Boolean) -> Unit): Boolean {
+        if (_connectionState.value != STATE_CONNECTED) return false
+        val g = gatt ?: return false
+        val service: BluetoothGattService = g.getService(SERVICE_UUID) ?: return false
+        val ctrlChar: BluetoothGattCharacteristic = service.getCharacteristic(CHAR_CTRL_UUID) ?: return false
 
         enqueueGattOperation {
-            val currentGatt = gatt
-            if (currentGatt != null) {
-                if (!currentGatt.writeCharacteristic(ctrlChar)) {
-                    Log.w(TAG, "writeCharacteristic returned false")
-                    postError("写入命令失败")
-                    processNextGattOperation()
-                }
-            } else {
-                // gatt 已断开，丢弃本条 op
+            if (g !== gatt) return@enqueueGattOperation
+            val bytes = ByteArray(if (token == null) 1 else 5)
+            bytes[0] = if (powerOn) 1 else 0
+            if (token != null) for (i in 0..3) bytes[i + 1] = (token shr (8 * i)).toByte()
+            ctrlChar.value = bytes
+            ctrlChar.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            powerWriteCallback = onWritten
+            if (!g.writeCharacteristic(ctrlChar)) {
+                Log.w(TAG, "writeCharacteristic returned false")
+                postError("写入命令失败")
+                powerWriteCallback = null
+                onWritten(false)
                 processNextGattOperation()
             }
         }
+        return true
     }
 
     // ==================== GATT 回调 ====================
 
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
-            if (g !== gatt) return // 旧 GATT 的延迟回调直接丢弃
-            // 只检查 status=133 且 newState=CONNECTED 的特定组合
-            if (status == 133 && newState == BluetoothProfile.STATE_CONNECTED) {
-                scope.launch { handleUnexpectedDisconnect() }
-                return
-            }
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                reconnectAttempts = 0
-                userInitiatedDisconnect = false
-                reconnectJob?.cancel()
-                reconnectTimeoutJob?.cancel()
-                updateConnectedDevice()
-                scope.launch {
-                    setConnectionState(STATE_CONNECTED)
-                    g.requestMtu(MTU_SIZE)
-                }
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                _connectedDevice.value = null
-                scope.launch {
+            scope.launch {
+                if (g !== gatt) return@launch
+                if (status != BluetoothGatt.GATT_SUCCESS) {
+                    handleUnexpectedDisconnect()
+                } else if (newState == BluetoothProfile.STATE_CONNECTED) {
+                    userInitiatedDisconnect = false
+                    reconnectJob?.cancel()
+                    if (!g.requestMtu(MTU_SIZE)) discoverServices(g)
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     if (!userInitiatedDisconnect) {
                         handleUnexpectedDisconnect()
                     } else {
@@ -384,22 +408,49 @@ class BleManager private constructor(context: Context) {
         }
 
         override fun onMtuChanged(g: BluetoothGatt, mtu: Int, status: Int) {
-            if (g !== gatt) return
-            currentMtu = if (status == BluetoothGatt.GATT_SUCCESS) mtu else 23
-            Log.d(TAG, "MTU changed: $currentMtu (status=$status)")
-            g.discoverServices()
+            scope.launch {
+                if (g !== gatt) return@launch
+                currentMtu = if (status == BluetoothGatt.GATT_SUCCESS) mtu else 23
+                discoverServices(g)
+            }
         }
 
         override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
-            if (g !== gatt) return
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+            scope.launch {
+                if (g !== gatt) return@launch
+                if (servicesReady) return@launch
                 val service = g.getService(SERVICE_UUID)
-                if (service != null) {
-                    enableNotification(g, service, CHAR_DATA_UUID)
-                    enableNotification(g, service, CHAR_STATIC_UUID)
+                val control = service?.getCharacteristic(CHAR_CTRL_UUID)
+                if (status != BluetoothGatt.GATT_SUCCESS || service == null || control == null ||
+                    (control.properties and BluetoothGattCharacteristic.PROPERTY_WRITE) == 0) {
+                    failConnection("设备缺少所需服务或控制特征")
+                    return@launch
                 }
-            } else {
-                postError("服务发现失败")
+                if (!enableNotification(g, service, CHAR_DATA_UUID) || !enableNotification(g, service, CHAR_STATIC_UUID)) {
+                    failConnection("通知注册失败")
+                    return@launch
+                }
+                if (g !== gatt) return@launch
+                servicesReady = true
+                if ((control.properties and BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
+                    enqueueGattOperation {
+                        if (g === gatt && !g.readCharacteristic(control)) failConnection("无法验证控制连接")
+                    }
+                } else controlReady = true // Legacy firmware: readiness still requires a complete dynamic packet.
+                markReady()
+            }
+        }
+
+        override fun onCharacteristicRead(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+            scope.launch {
+                if (g !== gatt || characteristic.uuid != CHAR_CTRL_UUID) return@launch
+                if (status != BluetoothGatt.GATT_SUCCESS) {
+                    failConnection("控制认证失败，请核对设备配对码")
+                    return@launch
+                }
+                controlReady = true
+                processNextGattOperation()
+                markReady()
             }
         }
 
@@ -408,16 +459,14 @@ class BleManager private constructor(context: Context) {
             characteristic: BluetoothGattCharacteristic,
         ) {
             if (g !== gatt) return
-            val value = characteristic.value ?: return
-            val chunk = String(value, StandardCharsets.UTF_8)
+            val value = characteristic.value?.copyOf() ?: return
             // 拼包缓冲区，按 UUID 维护
             val buffer = when (characteristic.uuid) {
                 CHAR_DATA_UUID -> jsonBufferData
                 CHAR_STATIC_UUID -> jsonBufferStatic
                 else -> return
             }
-            buffer.append(chunk)
-            tryParseAndDispatch(characteristic.uuid, buffer)
+            tryParseAndDispatch(characteristic.uuid, buffer, value, g)
         }
 
         override fun onCharacteristicWrite(
@@ -425,11 +474,15 @@ class BleManager private constructor(context: Context) {
             characteristic: BluetoothGattCharacteristic,
             status: Int,
         ) {
-            if (g !== gatt) return
-            if (status != BluetoothGatt.GATT_SUCCESS) {
-                postError("写入失败 status=$status")
+            scope.launch {
+                if (g !== gatt) return@launch
+                if (characteristic.uuid != CHAR_CTRL_UUID) return@launch
+                val callback = powerWriteCallback
+                powerWriteCallback = null
+                callback?.invoke(status == BluetoothGatt.GATT_SUCCESS)
+                if (status != BluetoothGatt.GATT_SUCCESS) postError("写入失败 status=$status")
+                processNextGattOperation()
             }
-            processNextGattOperation()
         }
 
         override fun onDescriptorWrite(
@@ -437,83 +490,86 @@ class BleManager private constructor(context: Context) {
             descriptor: BluetoothGattDescriptor,
             status: Int,
         ) {
-            if (g !== gatt) return
-            if (status != BluetoothGatt.GATT_SUCCESS) {
-                postError("通知启用失败")
-                disconnectGatt()
-                setConnectionState(STATE_DISCONNECTED)
-                return
+            scope.launch {
+                if (g !== gatt) return@launch
+                if (status != BluetoothGatt.GATT_SUCCESS) {
+                    failConnection("通知启用失败")
+                    return@launch
+                }
+                if (!pendingSubscriptions.remove(descriptor.characteristic.uuid)) return@launch
+                processNextGattOperation()
+                markReady()
             }
-            processNextGattOperation()
         }
     }
 
     // ==================== 内部方法 ====================
 
-    private fun enableNotification(g: BluetoothGatt, service: BluetoothGattService, charUuid: UUID) {
-        val characteristic = service.getCharacteristic(charUuid) ?: return
+    private fun discoverServices(g: BluetoothGatt) {
+        if (servicesRequested) return
+        servicesRequested = true
+        if (!g.discoverServices()) failConnection("无法发现设备服务")
+    }
 
-        g.setCharacteristicNotification(characteristic, true)
-        val descriptor = characteristic.getDescriptor(CCCD_UUID) ?: return
+    private fun failConnection(message: String) {
+        userInitiatedDisconnect = true
+        disconnectGatt()
+        setConnectionState(STATE_DISCONNECTED)
+        postError(message)
+    }
+
+    private fun markReady() {
+        if (gatt != null && servicesReady && controlReady && receivedDynamic && pendingSubscriptions.isEmpty() &&
+            _connectionState.value == STATE_CONNECTING) {
+            reconnectTimeoutJob?.cancel()
+            reconnectAttempts = 0
+            updateConnectedDevice()
+            setConnectionState(STATE_CONNECTED)
+        }
+    }
+
+    private fun enableNotification(g: BluetoothGatt, service: BluetoothGattService, charUuid: UUID): Boolean {
+        val characteristic = service.getCharacteristic(charUuid) ?: return false
+        if ((characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0 ||
+            !g.setCharacteristicNotification(characteristic, true)) return false
+        val descriptor = characteristic.getDescriptor(CCCD_UUID) ?: return true
         descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-
+        pendingSubscriptions.add(charUuid)
         enqueueGattOperation {
-            val currentGatt = gatt
-            if (currentGatt != null) {
-                if (!currentGatt.writeDescriptor(descriptor)) {
-                    Log.w(TAG, "writeDescriptor returned false")
-                    postError("通知启用失败")
-                    disconnectGatt()
-                    setConnectionState(STATE_DISCONNECTED)
-                    // 队列已在 disconnectGatt 中清空
-                }
-            } else {
-                processNextGattOperation()
-            }
+            if (g === gatt && !g.writeDescriptor(descriptor)) failConnection("通知启用失败")
         }
+        return true
     }
 
-    /** 拼包尝试：JSON 括号配对完整即派发（本方法运行于 binder 线程） */
-    private fun tryParseAndDispatch(uuid: UUID, buffer: StringBuffer) {
-        val json = buffer.toString().trim()
-        if (json.isEmpty()) return
-
-        if (isJsonComplete(json)) {
-            buffer.setLength(0)
-            // 移到主线程解析，避免占用 binder 线程
-            val jsonStr = json
-            scope.launch(Dispatchers.Main) { parseAndDispatch(uuid, jsonStr) }
+    private fun tryParseAndDispatch(uuid: UUID, buffer: JsonFrameBuffer, value: ByteArray, expectedGatt: BluetoothGatt?) {
+        val session = sessionId
+        scope.launch(Dispatchers.Main) {
+            if (session != sessionId || expectedGatt !== gatt) return@launch
+            buffer.consume(value, SystemClock.elapsedRealtime()) { json -> parseAndDispatch(uuid, json) }
         }
-    }
-
-    private fun isJsonComplete(json: String): Boolean {
-        var braceCount = 0
-        var started = false
-        for (c in json) {
-            if (c == '{') {
-                braceCount++
-                started = true
-            } else if (c == '}') {
-                braceCount--
-            }
-            if (started && braceCount == 0) return true
-        }
-        return false
     }
 
     private fun parseAndDispatch(uuid: UUID, json: String) {
         try {
             val obj = JSONObject(json)
             when (uuid) {
-                CHAR_DATA_UUID -> _dynamicData.value = DynamicData.parse(obj)
-                CHAR_STATIC_UUID -> _staticData.value = StaticData.parse(obj)
+                CHAR_DATA_UUID -> {
+                    _dynamicData.value = DynamicData.parse(obj)
+                    receivedDynamic = true
+                    markReady()
+                }
+                CHAR_STATIC_UUID -> {
+                    _staticData.value = StaticData.parse(obj)
+                    _staticPackets.tryEmit(Unit)
+                }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "JSON parse failed: $json", e)
+            Log.w(TAG, "JSON parse failed", e)
         }
     }
 
     private fun handleUnexpectedDisconnect() {
+        disconnectGatt()
         if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS && lastConnectedAddress != null) {
             reconnectAttempts++
             setConnectionState(STATE_CONNECTING)
@@ -523,15 +579,6 @@ class BleManager private constructor(context: Context) {
                 delay(RECONNECT_DELAY_MS)
                 if (!userInitiatedDisconnect && lastConnectedAddress != null) {
                     doConnect(lastConnectedAddress!!)
-                    reconnectTimeoutJob = scope.launch {
-                        delay(RECONNECT_TIMEOUT_MS)
-                        if (_connectionState.value == STATE_CONNECTING) {
-                            Log.w(TAG, "Reconnect timeout, giving up")
-                            disconnectGatt()
-                            setConnectionState(STATE_DISCONNECTED)
-                            postError("连接已断开")
-                        }
-                    }
                 }
             }
         } else {
@@ -585,20 +632,17 @@ class BleManager private constructor(context: Context) {
             }
             gattBusy = true
             val op = gattQueue.removeAt(0)
-            // op 必须在主线程执行（等价原版 mainHandler.post）：Main.immediate 保证主线程调用时同步、binder 线程调用时入队
-            scope.launch { op.run() }
-            // 超时 job 在体外赋值，避免 op 内嵌套 processNextGattOperation 时外层覆盖内层 job 引用
+            val session = sessionId
+            // Install the deadline before an immediate failure can start the next operation.
             gattOpTimeoutJob = scope.launch {
                 delay(GATT_OP_TIMEOUT_MS)
                 synchronized(gattQueue) {
-                    if (gattBusy) {
-                        Log.w(TAG, "GATT operation timeout, forcing next")
-                        postError("GATT 操作超时")
-                        gattBusy = false
-                        gattQueue.clear()
+                    if (session == sessionId && gattBusy) {
+                        failConnection("蓝牙操作或配对超时，请重新连接")
                     }
                 }
             }
+            scope.launch { op.run() }
         }
     }
 }

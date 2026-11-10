@@ -49,6 +49,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         // 超时阈值
         private const val DATA_TIMEOUT_MS = 3_000L
         private const val STATIC_TIMEOUT_MS = 10_000L
+        private const val STATIC_SAMPLE_TIMEOUT_MS = 45_000L
         private const val POWER_TIMEOUT_MS = 5_000L
 
         // Y 轴 bounds 计算参数
@@ -143,6 +144,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val powerTimeout: StateFlow<Boolean> = _powerTimeout.asStateFlow()
 
     private var pendingPowerState = -1
+    private var pendingPowerSession = -1L
+    private var nextPowerRequest = 0L
+    private var pendingPowerRequest = 0L
+    private var pendingPowerToken: Long? = null
+    private var pendingWriteComplete = false
     private var powerTimeoutJob: Job? = null
 
     init {
@@ -156,6 +162,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             connectionState.collect { state ->
                 if (state == BleManager.STATE_CONNECTED) {
                     ble.getLastConnectedAddress()?.let { prefs.edit().putString(KEY_LAST_MAC, it).apply() }
+                    resetDataTimeout()
+                    resetStaticTimeout()
+                } else {
+                    resetSessionState()
                 }
             }
         }
@@ -167,7 +177,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
         // 静态数据：重置超时
         viewModelScope.launch {
-            staticData.filterNotNull().collect { onStaticData() }
+            ble.staticPackets.collect { onStaticData() }
         }
 
         // 扫描结果：命中记忆设备则自动连接
@@ -207,15 +217,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun connect(address: String) = ble.connect(address)
+    fun connect(address: String) {
+        resetSessionState()
+        ble.connect(address)
+    }
 
-    fun disconnect() = ble.disconnect()
+    fun disconnect() {
+        resetSessionState()
+        ble.disconnect()
+    }
 
     private fun autoConnectIfMatched() {
         if (connectionState.value != BleManager.STATE_SCANNING) return
         val lastMac = prefs.getString(KEY_LAST_MAC, null) ?: return
         val match = scannedDevices.value.firstOrNull { it.address == lastMac }
-        match?.let { ble.connect(it.address) }
+        match?.let { connect(it.address) }
     }
 
     /** 当前选择设备（供控制页 UI 记住选择） */
@@ -224,27 +240,37 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     // ==================== 曲线追加 ====================
 
+    private var lastSequence: Long? = null
+    private var lastStaticSequence: Long? = null
+
     private fun onDynamicData(d: DynamicData) {
+        if (d.sequence != null && d.sequence == lastSequence) return
+        lastSequence = d.sequence
         _dataInterrupted.value = false
         if (!chartPaused.value) {
             appendChartEntry(d)
         }
         resetDataTimeout()
 
-        // 电源命令确认：设备回报 pwr 与目标一致即确认成功
-        if (_powerPending.value && d.pwr == pendingPowerState) {
+        // Legacy peers lack command ids; even then feedback must follow a successful write.
+        if (_powerPending.value && pendingWriteComplete && pendingPowerSession == ble.sessionId &&
+            (pendingPowerToken == null || d.acknowledgement == pendingPowerToken) && d.pwr == pendingPowerState) {
             _powerPending.value = false
             powerTimeoutJob?.cancel()
         }
     }
 
     private fun onStaticData() {
+        val sequence = staticData.value?.sequence
+        if (sequence != null && sequence == lastStaticSequence) return
+        lastStaticSequence = sequence
         _staticInterrupted.value = false
         resetStaticTimeout()
     }
 
     private fun appendChartEntry(d: DynamicData) {
-        val raw = floatArrayOf(d.vout, d.iout, d.pout, d.eff.toFloat(), d.t1, d.t2)
+        val raw = floatArrayOf(d.vout ?: Float.NaN, d.iout ?: Float.NaN, d.pout ?: Float.NaN,
+            d.eff?.toFloat() ?: Float.NaN, d.t1 ?: Float.NaN, d.t2 ?: Float.NaN)
         if (!emaInit) {
             for (i in 0 until 6) ema[i] = raw[i]
             emaInit = true
@@ -253,7 +279,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val a = EMA_ALPHA[i]
                 // 跳变直通：新值与平滑值偏差超过阈值判定为真实电平跳变，直接重置（瞬间到位不爬坡）
                 val threshold = maxOf(kotlin.math.abs(ema[i]) * JUMP_RATIO, JUMP_FLOOR)
-                ema[i] = if (kotlin.math.abs(raw[i] - ema[i]) > threshold) raw[i]
+                ema[i] = if (!raw[i].isFinite() || !ema[i].isFinite() || kotlin.math.abs(raw[i] - ema[i]) > threshold) raw[i]
                 else a * raw[i] + (1 - a) * ema[i]
             }
         }
@@ -261,7 +287,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         // 曲线 X 轴用本地单调时钟（秒）：固件 rt 是整数秒（每秒 4 条数据同值），
         // 直接用 rt 会让 4 个点堆在同一横坐标、曲线变垂直尖峰。
         // 本地 elapsedRealtime 每 250ms 真实前进 0.25，掉帧时也能正确反映时间间隔。
-        xTimes.add(SystemClock.elapsedRealtime() / 1000f)
+        appendTrimmed(xTimes, SystemClock.elapsedRealtime() / 1000f)
         appendTrimmed(yVout, ema[0])
         appendTrimmed(yIout, ema[1])
         appendTrimmed(yPout, ema[2])
@@ -354,7 +380,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private fun resetStaticTimeout() {
         staticTimeoutJob?.cancel()
         staticTimeoutJob = viewModelScope.launch {
-            delay(STATIC_TIMEOUT_MS)
+            delay(if (lastStaticSequence == null) STATIC_TIMEOUT_MS else STATIC_SAMPLE_TIMEOUT_MS)
             if (connectionState.value == BleManager.STATE_CONNECTED) {
                 _staticInterrupted.value = true
             }
@@ -365,24 +391,62 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun sendPower(on: Boolean) {
         if (connectionState.value != BleManager.STATE_CONNECTED) return
+        if (_dataInterrupted.value || dynamicData.value == null) return
+        val session = ble.sessionId
+        nextPowerRequest = nextPowerRequest % 0xFFFFFFFFL + 1
+        val request = nextPowerRequest
+        pendingPowerRequest = request
+        pendingPowerSession = ble.sessionId
+        pendingPowerToken = request.takeIf { dynamicData.value?.acknowledgement != null }
+        pendingWriteComplete = false
         pendingPowerState = if (on) 1 else 0
         _powerPending.value = true
         _powerTimeout.value = false
-        ble.sendPowerCommand(on)
 
         powerTimeoutJob?.cancel()
-        powerTimeoutJob = viewModelScope.launch {
-            delay(POWER_TIMEOUT_MS)
-            if (_powerPending.value) {
-                _powerPending.value = false
-                _powerTimeout.value = true
+        if (!ble.sendPowerCommand(on, pendingPowerToken) { success ->
+            if (session == ble.sessionId && request == pendingPowerRequest && _powerPending.value) {
+                if (!success) {
+                    _powerPending.value = false
+                    _errors.tryEmit("写入命令失败")
+                } else {
+                    pendingWriteComplete = true
+                    powerTimeoutJob = viewModelScope.launch {
+                        delay(POWER_TIMEOUT_MS)
+                        if (_powerPending.value && request == pendingPowerRequest) {
+                            _powerPending.value = false
+                            _powerTimeout.value = true
+                        }
+                    }
+                }
             }
+        }) {
+            _powerPending.value = false
+            _errors.tryEmit("控制尚未就绪")
         }
     }
 
     fun confirmPowerRetry() {
+        if (pendingPowerState < 0 || pendingPowerSession != ble.sessionId) return
         val lastOn = pendingPowerState == 1
         sendPower(lastOn)
+    }
+
+    private fun resetSessionState() {
+        lastSequence = null
+        lastStaticSequence = null
+        pendingPowerToken = null
+        pendingWriteComplete = false
+        dataTimeoutJob?.cancel()
+        staticTimeoutJob?.cancel()
+        powerTimeoutJob?.cancel()
+        pendingPowerState = -1
+        pendingPowerSession = -1
+        _powerPending.value = false
+        _powerTimeout.value = false
+        _dataInterrupted.value = false
+        _staticInterrupted.value = false
+        clearChartData()
     }
 
     // ==================== 图表暂停（应用生命周期） ====================
